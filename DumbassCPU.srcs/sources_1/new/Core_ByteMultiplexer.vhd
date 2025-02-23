@@ -1,37 +1,7 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/19/2025 07:54:45 PM
--- Design Name: 
--- Module Name: InstructionByteOutputSelector - Structural
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
-
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
-entity InstructionByteOutputSelector is Port(
+entity Core_ByteMultiplexer is Port(
     instruction_0_in, 
     instruction_1_in, 
     instruction_2_in, 
@@ -52,11 +22,11 @@ entity InstructionByteOutputSelector is Port(
     selecting_bits: in std_logic_vector(3 downto 0);
     selected_byte: out std_logic_vector(7 downto 0)
 );
-end InstructionByteOutputSelector;
+end Core_ByteMultiplexer;
 
-architecture Structural of InstructionByteOutputSelector is
+architecture Structural of Core_ByteMultiplexer is
 
-component InstructionBitOutputSelector is Port(
+component Core_BitMultiplexer is Port(
     input_bits: in std_logic_vector (15 downto 0);
     selecting_bits: in std_Logic_vector (3 downto 0);
     selected_bit: out std_logic
@@ -89,7 +59,7 @@ begin
 
     -- not coding 256*8 lines ok, vhdl sucks more than wiring shit up
 	proc: process(grouped_by_instruction) is
-	begin		
+	begin
 		for instruction in 0 to 15 loop
 			for gbit in 0 to 7 loop
 				grouped_by_bit_order(gbit)(instruction) <= grouped_by_instruction(instruction)(gbit);
@@ -97,13 +67,13 @@ begin
 		end loop;
 	end process proc;
 	
-	bit_7: InstructionBitOutputSelector port map (grouped_by_bit_order(7), selecting_bits, selected_byte(7));
-	bit_6: InstructionBitOutputSelector port map (grouped_by_bit_order(6), selecting_bits, selected_byte(6));
-	bit_5: InstructionBitOutputSelector port map (grouped_by_bit_order(5), selecting_bits, selected_byte(5));
-	bit_4: InstructionBitOutputSelector port map (grouped_by_bit_order(4), selecting_bits, selected_byte(4));
-	bit_3: InstructionBitOutputSelector port map (grouped_by_bit_order(3), selecting_bits, selected_byte(3));
-	bit_2: InstructionBitOutputSelector port map (grouped_by_bit_order(2), selecting_bits, selected_byte(2));
-	bit_1: InstructionBitOutputSelector port map (grouped_by_bit_order(1), selecting_bits, selected_byte(1));
-	bit_0: InstructionBitOutputSelector port map (grouped_by_bit_order(0), selecting_bits, selected_byte(0));
+	bit_7: Core_BitMultiplexer port map (grouped_by_bit_order(7), selecting_bits, selected_byte(7));
+	bit_6: Core_BitMultiplexer port map (grouped_by_bit_order(6), selecting_bits, selected_byte(6));
+	bit_5: Core_BitMultiplexer port map (grouped_by_bit_order(5), selecting_bits, selected_byte(5));
+	bit_4: Core_BitMultiplexer port map (grouped_by_bit_order(4), selecting_bits, selected_byte(4));
+	bit_3: Core_BitMultiplexer port map (grouped_by_bit_order(3), selecting_bits, selected_byte(3));
+	bit_2: Core_BitMultiplexer port map (grouped_by_bit_order(2), selecting_bits, selected_byte(2));
+	bit_1: Core_BitMultiplexer port map (grouped_by_bit_order(1), selecting_bits, selected_byte(1));
+	bit_0: Core_BitMultiplexer port map (grouped_by_bit_order(0), selecting_bits, selected_byte(0));
 	
 end Structural;

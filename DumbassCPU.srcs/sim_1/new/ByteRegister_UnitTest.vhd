@@ -53,21 +53,27 @@ begin
 
     proc: process is
     begin
-        overwrite <= '0';
-        data_in <= "00000000";
-        wait for 100ns;
-        assert(data_out = "00000000");  
+        assert(false)
+        report "---- ByteRegister_UnitTest begin ----"
+        severity note;
         
         overwrite <= '1';
         data_in <= "10101010";
-        wait for 100ns;
-        assert(data_out = "10101010");
+        wait for 110ns;
+        assert(data_out = "10101010")
+        report "Failed at case 0: overwrite"
+        severity error;
         
         overwrite <= '0';
         data_in <= "00000000";
         wait for 100ns;
-        assert(data_out = "10101010");      
+        assert(data_out = "10101010")
+        report "Failed at case 1: to not overwrite"
+        severity error;
         
+        assert(false)
+        report "---- ByteRegister_UnitTest end ----"
+        severity note;
         wait;
     end process proc;
 

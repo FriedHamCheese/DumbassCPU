@@ -1,43 +1,13 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/21/2025 01:07:57 PM
--- Design Name: 
--- Module Name: InstructionByteOutputSelector_UnitTest - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
-
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
-entity InstructionByteOutputSelector_UnitTest is
+entity Core_ByteMultiplexer_UnitTest is
 --  Port ( );
-end InstructionByteOutputSelector_UnitTest;
+end Core_ByteMultiplexer_UnitTest;
 
-architecture Behavioral of InstructionByteOutputSelector_UnitTest is
+architecture Behavioral of Core_ByteMultiplexer_UnitTest is
 
-component InstructionByteOutputSelector is Port(
+component Core_ByteMultiplexer is Port(
     instruction_0_in, 
     instruction_1_in, 
     instruction_2_in, 
@@ -64,7 +34,7 @@ signal selecting_bits: std_logic_vector(3 downto 0);
 signal selected_byte: std_logic_vector(7 downto 0);
 
 begin
-    selector: InstructionByteOutputSelector port map(
+    selector: Core_ByteMultiplexer port map(
         "00000001",
         "00000010",
         "00000100",
@@ -89,17 +59,17 @@ begin
     proc: process is
     begin
         assert(false = true)
-        report "---- InstructionByteOutputSelector_UnitTest Begin ----"
+        report "---- Core_ByteMultiplexer_UnitTest Begin ----"
         severity note;
         
         selecting_bits <= "0000";
         wait for 20ns;
         assert(selected_byte = "00000001")
-        report "InstructionByteOutputSelector_UnitTest: failed case 0"
+        report "Core_ByteMultiplexer_UnitTest: failed case 0"
         severity error;
         
         assert(false = true)
-        report "---- InstructionByteOutputSelector_UnitTest End ----"
+        report "---- Core_ByteMultiplexer_UnitTest End ----"
         severity note;
         wait;
     end process proc;

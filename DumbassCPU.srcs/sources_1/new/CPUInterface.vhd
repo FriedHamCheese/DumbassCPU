@@ -1,35 +1,5 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/21/2025 05:33:11 PM
--- Design Name: 
--- Module Name: CPUInterface - Structural
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
-
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity CPUInterface is Port(
     clk: in std_logic;
@@ -38,36 +8,12 @@ entity CPUInterface is Port(
     debug_output_reg_a,
     debug_output_reg_b
     : out std_logic_vector(7 downto 0)
-    
 );
 end CPUInterface;
 
 architecture Structural of CPUInterface is
 
-component InstructionInputByteSelector is Port(
-    input_byte: in std_logic_vector(7 downto 0);
-    selecting_bits: in std_logic_vector (3 downto 0);
-    instruction_0_out,
-    instruction_1_out,
-    instruction_2_out,
-    instruction_3_out,
-    instruction_4_out,
-    instruction_5_out,
-    instruction_6_out,
-    instruction_7_out,
-    instruction_8_out,
-    instruction_9_out,
-    instruction_10_out,
-    instruction_11_out,
-    instruction_12_out,
-    instruction_13_out,
-    instruction_14_out,
-    instruction_15_out
-    : out std_logic_vector (7 downto 0)
-);
-end component;
-
-component InstructionByteOutputSelector is Port(
+component Core_ByteMultiplexer is Port(
     instruction_0_in, 
     instruction_1_in, 
     instruction_2_in, 
@@ -135,7 +81,7 @@ begin
     register_b_overwrite <= (not (opcode(3)) and (not opcode(2)) and opcode(1) and (not opcode(0)));
     register_b: ByteRegister port map(register_b_in, register_b_overwrite, clk, register_b_out);
 
-    to_register_a_input: InstructionByteOutputSelector port map(
+    to_register_a_input: Core_ByteMultiplexer port map(
         immediate,
         register_b_out,
         placeholder_byte,
@@ -158,7 +104,7 @@ begin
         register_a_in
     );
     
-    to_register_b_input: InstructionByteOutputSelector port map(
+    to_register_b_input: Core_ByteMultiplexer port map(
         placeholder_byte,
         placeholder_byte,
         register_a_out,
