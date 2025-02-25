@@ -7,6 +7,7 @@ entity CPUInterface is Port(
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
     debug_output_reg_b
+    --debug_output
     : out std_logic_vector(7 downto 0)
 );
 end CPUInterface;
@@ -103,7 +104,11 @@ signal
     register_a_in, 
     register_a_out,
     register_b_in,
-    register_b_out
+    register_b_out,
+    a_opand_b,
+    not_a,
+    a_opor_b,
+    a_opxor_b
     : std_logic_vector(7 downto 0) := "00000000";
     
 signal 
@@ -122,13 +127,19 @@ signal
 -- 6    sub (A = A-B)
 -- 7    shl B (A = A << B)
 
+-- 8    and B (A = A and B)
+-- 9    or B (A = A or B)
+-- 10   not  (not A)
+-- 11   xor B (A = A xor B)
+
 begin
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
+    --debug_output <= not register_a_out;
 
-    register_a_overwrite <= ((not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))
-                        or  ((not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))
-    ;
+    register_a_overwrite <= (not ((not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0))))
+                        and (not ((not opcode(3)) and (opcode(2)) and (not opcode(1)) and (not opcode(0))))
+                        and (not ((opcode(3)) and (opcode(2))));
     register_a: ByteRegister port map(register_a_in, register_a_overwrite, clk, register_a_out);
 
     register_b_overwrite <= (not (opcode(3)) and (not opcode(2)) and opcode(1) and (not opcode(0)));
@@ -144,10 +155,10 @@ begin
         placeholder_byte,
         placeholder_byte,
 
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
+        a_opand_b,
+        a_opor_b,
+        not_a,
+        a_opxor_b,
         placeholder_byte,
         placeholder_byte,
         placeholder_byte,
@@ -287,5 +298,10 @@ begin
         opcode,
         register_b_in
     );
+    
+    not_a <= not register_a_out;
+    a_opand_b <= register_a_out and register_b_out;
+    a_opor_b <= register_a_out or register_b_out;
+    a_opxor_b <= register_a_out xor register_b_out;
 
 end Structural;
