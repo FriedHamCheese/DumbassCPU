@@ -6,8 +6,8 @@ entity CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
-    debug_output_reg_b
-    --debug_output
+    debug_output_reg_b,
+    debug_output
     : out std_logic_vector(7 downto 0)
 );
 end CPUInterface;
@@ -99,6 +99,15 @@ component ByteRegister is Port(
 );
 end component;
 
+component Subtracter is 
+    Port (
+        A : in  STD_LOGIC_VECTOR (7 downto 0);
+        B : in  STD_LOGIC_VECTOR (7 downto 0);
+        Difference : out  STD_LOGIC_VECTOR (7 downto 0);
+        Borrow : out  STD_LOGIC
+    );
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -108,20 +117,23 @@ signal
     a_opand_b,
     not_a,
     a_opor_b,
-    a_opxor_b
-    : std_logic_vector(7 downto 0) := "00000000";
+    a_opxor_b,
+    internal_debug_output,
+    subtracter_out
+: std_logic_vector(7 downto 0) := "00000000";
     
 signal 
     register_a_overwrite,
-    register_b_overwrite
-    : std_logic := '0';
+    register_b_overwrite,
+    placeholder_bit
+: std_logic := '0';
 
 -- opcodes:
 -- 0    set A, imm
 -- 1    set A, B
 -- 2    set B, A
--- 3    set A, mem[imm]
--- 4    set mem[imm], A
+-- 3    set A, mem[B]
+-- 4    set mem[B], A
 
 -- 5    add (A = A+B)
 -- 6    sub (A = A-B)
@@ -135,14 +147,27 @@ signal
 begin
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
-    --debug_output <= not register_a_out;
+    internal_debug_output(0) <= register_a_overwrite;
+    debug_output <= register_a_in;
 
-    register_a_overwrite <= (not ((not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0))))
-                        and (not ((not opcode(3)) and (opcode(2)) and (not opcode(1)) and (not opcode(0))))
-                        and (not ((opcode(3)) and (opcode(2))));
+    register_a_overwrite <= 
+			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))		-- 1
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))			-- 3
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 5
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 6
+
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))		-- 8
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 9
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))				-- 11
+	;
+	
     register_a: ByteRegister port map(register_a_in, register_a_overwrite, clk, register_a_out);
 
-    register_b_overwrite <= (not (opcode(3)) and (not opcode(2)) and opcode(1) and (not opcode(0)));
+    register_b_overwrite <= 
+			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))		-- 2
+	;
     register_b: ByteRegister port map(register_b_in, register_b_overwrite, clk, register_b_out);
 
     to_register_a_input: Core_ByteMultiplexer port map(
@@ -152,7 +177,7 @@ begin
         placeholder_byte,
         placeholder_byte,
         placeholder_byte,
-        placeholder_byte,
+        subtracter_out,
         placeholder_byte,
 
         a_opand_b,
@@ -303,5 +328,7 @@ begin
     a_opand_b <= register_a_out and register_b_out;
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
+    
+    sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
 
 end Structural;

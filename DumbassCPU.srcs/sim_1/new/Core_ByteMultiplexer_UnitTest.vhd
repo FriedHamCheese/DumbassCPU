@@ -25,12 +25,12 @@ component Core_ByteMultiplexer is Port(
     instruction_14_in,
     instruction_15_in 
     : in std_logic_vector(7 downto 0);
-    selecting_bits: in std_logic_vector(3 downto 0);
+    selecting_bits: in std_logic_vector(7 downto 0);
     selected_byte: out std_logic_vector(7 downto 0)
 );
 end component;
 
-signal selecting_bits: std_logic_vector(3 downto 0);
+signal selecting_bits: std_logic_vector(7 downto 0);
 signal selected_byte: std_logic_vector(7 downto 0);
 
 begin
@@ -62,7 +62,7 @@ begin
         report "---- Core_ByteMultiplexer_UnitTest Begin ----"
         severity note;
         
-        selecting_bits <= "0000";
+        selecting_bits <= "00000000";
         wait for 20ns;
         assert(selected_byte = "00000001")
         report "Core_ByteMultiplexer_UnitTest: failed case 0"
