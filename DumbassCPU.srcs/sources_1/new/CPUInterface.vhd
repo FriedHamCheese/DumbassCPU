@@ -14,6 +14,13 @@ end CPUInterface;
 
 architecture Structural of CPUInterface is
 
+component ProgramRom is Port(
+    address : in std_logic_vector(7 downto 0);
+    output_msb : out std_logic_vector(7 downto 0);
+    output_lsb : out std_logic_vector(7 downto 0)
+);
+end component;
+
 component Core_ByteMultiplexer is Port(
     instruction_0_in, 
     instruction_1_in, 
@@ -99,6 +106,13 @@ component ByteRegister is Port(
 );
 end component;
 
+component AndEightBitByOneBit is Port(
+    eight_bits: in std_logic_vector(7 downto 0);
+    one_bit: in std_logic;
+    output: out std_logic_vector(7 downto 0)
+);
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -108,12 +122,19 @@ signal
     a_opand_b,
     not_a,
     a_opor_b,
-    a_opxor_b
+    a_opxor_b,
+    program_counter_write_as,
+    program_counter_current_instruction,
+    final_opcode,
+    final_opcode_use_pc,
+    final_opcode_use_entered_opcode
     : std_logic_vector(7 downto 0) := "00000000";
-    
+
 signal 
     register_a_overwrite,
-    register_b_overwrite
+    register_b_overwrite,
+    program_counter_overwrite,
+    use_entered_opcode
     : std_logic := '0';
 
 -- opcodes:
@@ -132,10 +153,17 @@ signal
 -- 10   not  (not A)
 -- 11   xor B (A = A xor B)
 
+-- 129  jmp A
+
 begin
+    use_entered_opcode <= not opcode(7);
+    final_opcode_use_pc_8_and_1: AndEightBitByOneBit port map(eight_bits => program_counter_current_instruction, one_bit => opcode(7), output => final_opcode_use_pc);
+    final_opcode_use_entered_opcode_8_and_1: AndEightBitByOneBit port map(eight_bits => opcode, one_bit => use_entered_opcode, output => final_opcode_use_entered_opcode);
+     
+    final_opcode <= final_opcode_use_pc_8_and_1 or final_opcode_use_entered_opcode_8_and_1;
+
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
-    --debug_output <= not register_a_out;
 
     register_a_overwrite <= (not ((not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0))))
                         and (not ((not opcode(3)) and (opcode(2)) and (not opcode(1)) and (not opcode(0))))
@@ -303,5 +331,14 @@ begin
     a_opand_b <= register_a_out and register_b_out;
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
+    
+    program_counter: ByteRegister port map(data_in => program_counter_write_as, 
+                        overwrite => program_counter_overwrite, 
+                        rising_edge_clk => clk,
+                        data_out => program_counter_current_instruction              
+    );
+    
+    program_counter_overwrite <= opcode(7);
+    program_counter_write_as <= (not (opcode xor "10000001")) and register_a_out;
 
 end Structural;
