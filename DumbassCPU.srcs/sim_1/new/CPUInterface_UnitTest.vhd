@@ -31,7 +31,13 @@ begin
         immediate <= "10101010";
         wait for 110ns;             
         assert(debug_output_reg_a = "10101010");
-
+        
+        -- set B, imm
+        opcode <= "00000101";
+        immediate <= "11010011";  
+        wait for 110ns;             
+        assert(debug_output_reg_b = "11010011");
+        
         -- set B, A        
         opcode <= "00000000";
         immediate <= "10101010";
@@ -53,10 +59,8 @@ begin
         
         -- add
         -- sub (11111111 - 10101010 = 01010101)
-        opcode <= "00000000";
+        opcode <= "00000101";
         immediate <= "10101010";
-        wait for 100ns;
-        opcode <= "00000010";
         wait for 100ns;
         opcode <= "00000000";
         immediate <= "11111111";
@@ -68,10 +72,8 @@ begin
         -- shl
         
         -- and (11111111 & 10101010 = 10101010)
-        opcode <= "00000000";
+        opcode <= "00000101";
         immediate <= "10101010";
-        wait for 100ns;
-        opcode <= "00000010";
         wait for 100ns;
         opcode <= "00000000";
         immediate <= "11111111";
@@ -81,10 +83,8 @@ begin
         assert(debug_output_reg_a = "10101010");        
         
         -- or (10101010 || 01010101 = 11111111)
-        opcode <= "00000000";
+        opcode <= "00000101";
         immediate <= "01010101";
-        wait for 100ns;
-        opcode <= "00000010";
         wait for 100ns;
         opcode <= "00000000";
         immediate <= "10101010";
@@ -102,10 +102,8 @@ begin
         assert(debug_output_reg_a = "00100100");   
         
         -- xor (10101010 || 10101010 = 00000000)
-        opcode <= "00000000";
+        opcode <= "00000101";
         immediate <= "10101010";
-        wait for 100ns;
-        opcode <= "00000010";
         wait for 100ns;
         opcode <= "00000000";
         immediate <= "10101010";

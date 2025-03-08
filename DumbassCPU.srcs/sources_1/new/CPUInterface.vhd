@@ -72,10 +72,14 @@ signal
 -- 2    set B, A
 -- 3    set A, mem[B]
 -- 4    set mem[B], A
+-- 5    set B, imm
 
 -- 5    add (A = A+B)
 -- 6    sub (A = A-B)
 -- 7    shl B (A = A << B)
+-- 8    shr B
+-- 9    mul B
+-- 10   rdiv B
 
 -- 8    and B (A = A and B)
 -- 9    or B (A = A or B)
@@ -86,7 +90,7 @@ begin
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
     internal_debug_output(0) <= register_a_overwrite;
-    debug_output <= register_a_in;
+    debug_output <= "00000000";
 
     register_a_overwrite <= 
 			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
@@ -100,13 +104,13 @@ begin
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))				-- 11
 	;
-	
-    register_a: ByteRegister port map(register_a_in, register_a_overwrite, clk, register_a_out);
+    register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
 
     register_b_overwrite <= 
 			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))		-- 2
+        or  ((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (not opcode(1)) and (opcode(0)))		    -- 5 
 	;
-    register_b: ByteRegister port map(register_b_in, register_b_overwrite, clk, register_b_out);
+    register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
 
     to_register_a_input: Core_ByteMultiplexer port map(
         immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, placeholder_byte,
@@ -122,15 +126,14 @@ begin
     );
     
     to_register_b_input: Core_ByteMultiplexer port map(
-        placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, immediate, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,       
         opcode,
         register_b_in
     );
