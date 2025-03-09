@@ -46,6 +46,16 @@ component Subtracter is
     );
 end component;
 
+component Adder8Bit is
+    Port (
+        A : in  STD_LOGIC_VECTOR (7 downto 0);
+        B : in  STD_LOGIC_VECTOR (7 downto 0);
+        Cin : in  STD_LOGIC;
+        Sum : out  STD_LOGIC_VECTOR (7 downto 0);
+        Cout : out  STD_LOGIC
+    );
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -57,7 +67,8 @@ signal
     a_opor_b,
     a_opxor_b,
     internal_debug_output,
-    subtracter_out
+    subtracter_out,
+    adder_out
 : std_logic_vector(7 downto 0) := "00000000";
     
 signal 
@@ -70,21 +81,20 @@ signal
 -- 0    set A, imm
 -- 1    set A, B
 -- 2    set B, A
--- 3    set A, mem[B]
--- 4    set mem[B], A
+-- 3    set A, mem[A]
+-- 4    set mem[A], A
 -- 5    set B, imm
 
--- 5    add (A = A+B)
 -- 6    sub (A = A-B)
--- 7    shl B (A = A << B)
--- 8    shr B
--- 9    mul B
--- 10   rdiv B
+-- 7    add (A = A+B)
 
 -- 8    and B (A = A and B)
 -- 9    or B (A = A or B)
 -- 10   not  (not A)
 -- 11   xor B (A = A xor B)
+
+-- 16   shl B
+-- 17   shr B
 
 begin
     debug_output_reg_a <= register_a_out;
@@ -96,9 +106,9 @@ begin
 			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))		-- 1
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))			-- 3
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 5
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 6
-
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (opcode(0)))			    -- 7
+		
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))		-- 8
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 9
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
@@ -113,7 +123,7 @@ begin
     register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
 
     to_register_a_input: Core_ByteMultiplexer port map(
-        immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, placeholder_byte,
+        immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
         a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -143,6 +153,7 @@ begin
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
     
+    adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
 
 end Structural;

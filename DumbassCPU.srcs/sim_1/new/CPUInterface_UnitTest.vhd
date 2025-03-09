@@ -54,10 +54,9 @@ begin
         wait for 100ns;
         assert(debug_output_reg_a = "10101010");        
         
-        -- set A, mem[B]
-        -- set mem[B], A
-        
-        -- add
+        -- set A, mem[A]
+        -- set mem[A], A
+    
         -- sub (11111111 - 10101010 = 01010101)
         opcode <= "00000101";
         immediate <= "10101010";
@@ -69,7 +68,16 @@ begin
         wait for 100ns;
         assert(debug_output_reg_a = "01010101");
         
-        -- shl
+        -- add (10101010 + 11010101 = 01111111)
+        opcode <= "00000000";
+        immediate <= "10101010";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "11010101";
+        wait for 100ns;
+        opcode <= "00000111";        
+        wait for 100ns;
+        assert(debug_output_reg_a = "01111111");        
         
         -- and (11111111 & 10101010 = 10101010)
         opcode <= "00000101";
