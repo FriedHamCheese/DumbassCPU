@@ -91,11 +91,11 @@ begin
 
 msb_selector: Core_ByteMultiplexer port map(
     "00000000",
+    "00000010",
     "00000000",
+    "00001000",  
     "00000000",
-    "00000000",  
-    "00000000",
-    "00000000",
+    "10000001",
     "00000000",
     "00000000",  
     
@@ -165,9 +165,9 @@ msb_selector: Core_ByteMultiplexer port map(
 );
 
 lsb_selector: Core_ByteMultiplexer port map(
+    "10101010",
     "00000000",
-    "00000000",
-    "00000000",
+    "11111111",
     "00000000",  
     "00000000",
     "00000000",

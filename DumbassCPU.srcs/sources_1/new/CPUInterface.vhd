@@ -6,13 +6,23 @@ entity CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
+    debug_output,
     debug_output_reg_b
-    --debug_output
     : out std_logic_vector(7 downto 0)
 );
 end CPUInterface;
 
 architecture Structural of CPUInterface is
+
+component Adder8Bit is
+    Port (
+        A : in  STD_LOGIC_VECTOR (7 downto 0);
+        B : in  STD_LOGIC_VECTOR (7 downto 0);
+        Cin : in  STD_LOGIC;
+        Sum : out  STD_LOGIC_VECTOR (7 downto 0);
+        Cout : out  STD_LOGIC
+    );
+end component;
 
 component ProgramRom is Port(
     address : in std_logic_vector(7 downto 0);
@@ -123,9 +133,12 @@ signal
     not_a,
     a_opor_b,
     a_opxor_b,
-    program_counter_write_as,
-    program_counter_current_instruction,
+    program_counter_in,
+    program_counter_current_index,
+    program_counter_incremented_index,
+    program_counter_opcode,
     final_opcode,
+    final_immediate,
     final_opcode_use_pc,
     final_opcode_use_entered_opcode
     : std_logic_vector(7 downto 0) := "00000000";
@@ -134,7 +147,9 @@ signal
     register_a_overwrite,
     register_b_overwrite,
     program_counter_overwrite,
-    use_entered_opcode
+    use_entered_opcode,
+	increment_program_counter,
+	placeholder_bit
     : std_logic := '0';
 
 -- opcodes:
@@ -156,25 +171,26 @@ signal
 -- 129  jmp A
 
 begin
+    debug_output <= final_opcode;
     use_entered_opcode <= not opcode(7);
-    final_opcode_use_pc_8_and_1: AndEightBitByOneBit port map(eight_bits => program_counter_current_instruction, one_bit => opcode(7), output => final_opcode_use_pc);
+    final_opcode_use_pc_opcode_8_and_1: AndEightBitByOneBit port map(eight_bits => program_counter_opcode, one_bit => opcode(7), output => final_opcode_use_pc);
     final_opcode_use_entered_opcode_8_and_1: AndEightBitByOneBit port map(eight_bits => opcode, one_bit => use_entered_opcode, output => final_opcode_use_entered_opcode);
      
-    final_opcode <= final_opcode_use_pc_8_and_1 or final_opcode_use_entered_opcode_8_and_1;
+    final_opcode <= final_opcode_use_pc or final_opcode_use_entered_opcode;
 
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
 
-    register_a_overwrite <= (not ((not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0))))
-                        and (not ((not opcode(3)) and (opcode(2)) and (not opcode(1)) and (not opcode(0))))
-                        and (not ((opcode(3)) and (opcode(2))));
+    register_a_overwrite <= (not ((not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0))))
+                        and (not ((not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0))))
+                        and (not ((final_opcode(3)) and (final_opcode(2))));
     register_a: ByteRegister port map(register_a_in, register_a_overwrite, clk, register_a_out);
 
-    register_b_overwrite <= (not (opcode(3)) and (not opcode(2)) and opcode(1) and (not opcode(0)));
+    register_b_overwrite <= (not (final_opcode(3)) and (not final_opcode(2)) and final_opcode(1) and (not final_opcode(0)));
     register_b: ByteRegister port map(register_b_in, register_b_overwrite, clk, register_b_out);
 
     to_register_a_input: Core_ByteMultiplexer port map(
-        immediate,
+        final_immediate,
         register_b_out,
         placeholder_byte,
         placeholder_byte,
@@ -246,7 +262,7 @@ begin
         placeholder_byte,
         placeholder_byte,
         
-        opcode,
+        final_opcode,
         register_a_in
     );
     
@@ -323,7 +339,7 @@ begin
         placeholder_byte,
         placeholder_byte,
         
-        opcode,
+        final_opcode,
         register_b_in
     );
     
@@ -332,13 +348,28 @@ begin
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
     
-    program_counter: ByteRegister port map(data_in => program_counter_write_as, 
-                        overwrite => program_counter_overwrite, 
+    program_counter: ByteRegister port map(data_in => program_counter_in, 
+                        overwrite => opcode(7),
                         rising_edge_clk => clk,
-                        data_out => program_counter_current_instruction              
+                        data_out => program_counter_current_index              
     );
-    
-    program_counter_overwrite <= opcode(7);
-    program_counter_write_as <= (not (opcode xor "10000001")) and register_a_out;
+
+	increment_program_counter <= opcode(7)
+									and (not ( (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)) ));	-- not jmp
+										
+	program_counter_increment: Adder8Bit port map(
+	   A => program_counter_current_index, 
+	   B => "00000000", 
+	   Cin => '1', 
+	   Sum => program_counter_incremented_index, 
+	   Cout => placeholder_bit
+    );
+	program_counter_use_increment_and: AndEightBitByOneBit port map(
+	   eight_bits => program_counter_current_index, 
+	   one_bit => increment_program_counter, 
+	   output => program_counter_incremented_index
+	);
+    program_counter_in <= ((final_opcode xor (not "10000001")) and register_a_out) or program_counter_incremented_index;
+    program_rom: ProgramRom port map(address => program_counter_current_index, output_msb => program_counter_opcode, output_lsb => final_immediate);
 
 end Structural;
