@@ -12,8 +12,8 @@ component CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
-    debug_output_reg_b,
-    debug_output
+    debug_output_reg_b
+    --,debug_output
     : out std_logic_vector(7 downto 0)
 );
 end component;
@@ -22,7 +22,8 @@ signal opcode, immediate, debug_output_reg_a, debug_output_reg_b, debug_output: 
 signal clk: std_logic;
 
 begin
-    cpu: CPUInterface port map(clk, opcode, immediate, debug_output_reg_a, debug_output_reg_b, debug_output);
+    cpu: CPUInterface port map(clk, opcode, immediate, debug_output_reg_a, debug_output_reg_b--, debug_output
+    );
 
     proc: process is
     begin
@@ -118,7 +119,18 @@ begin
         wait for 100ns;
         opcode <= "00001011";
         wait for 100ns;
-        assert(debug_output_reg_a = "00000000");             
+        assert(debug_output_reg_a = "00000000");          
+        
+        -- shl B (11010010 << 3 = 10010000)
+        opcode <= "00000000";
+        immediate <= "11010010";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "00000011";
+        wait for 100ns;
+        opcode <= "00010000";
+        wait for 100ns;
+        assert (debug_output_reg_a = "10010000");
     wait;
     end process proc;
 end Behavioral;

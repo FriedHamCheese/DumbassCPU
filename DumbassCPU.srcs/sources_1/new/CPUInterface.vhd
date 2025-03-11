@@ -6,8 +6,8 @@ entity CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
-    debug_output_reg_b,
-    debug_output
+    debug_output_reg_b
+    --,debug_output
     : out std_logic_vector(7 downto 0)
 );
 end CPUInterface;
@@ -56,6 +56,12 @@ component Adder8Bit is
     );
 end component;
 
+component ShiftLeft is
+    Port ( Input : in std_logic_vector(7 downto 0);
+           Count : in std_logic_vector(7 downto 0);
+           Output : out std_logic_vector(7 downto 0));
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -68,7 +74,8 @@ signal
     a_opxor_b,
     internal_debug_output,
     subtracter_out,
-    adder_out
+    adder_out,
+    shift_left_out
 : std_logic_vector(7 downto 0) := "00000000";
     
 signal 
@@ -100,7 +107,7 @@ begin
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
     internal_debug_output(0) <= register_a_overwrite;
-    debug_output <= "00000000";
+    --debug_output <= "00000000";
 
     register_a_overwrite <= 
 			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
@@ -113,6 +120,9 @@ begin
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 9
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
 		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))				-- 11
+
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))				-- 11
+		
 	;
     register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
 
@@ -125,7 +135,7 @@ begin
     to_register_a_input: Core_ByteMultiplexer port map(
         immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
         a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -156,4 +166,5 @@ begin
     adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
 
+    left_shift: ShiftLeft port map(Input => register_a_out, Count => register_b_out, Output => shift_left_out);
 end Structural;
