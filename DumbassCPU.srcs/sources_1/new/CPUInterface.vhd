@@ -32,76 +32,14 @@ component ProgramRom is Port(
 end component;
 
 component Core_ByteMultiplexer is Port(
-    instruction_0_in, 
-    instruction_1_in, 
-    instruction_2_in, 
-    instruction_3_in, 
-    instruction_4_in, 
-    instruction_5_in, 
-    instruction_6_in,
-    instruction_7_in,
-    instruction_8_in,
-    instruction_9_in,
-    
-    instruction_10_in,
-    instruction_11_in,
-    instruction_12_in,
-    instruction_13_in,
-    instruction_14_in,
-    instruction_15_in,
-    instruction_16_in,
-    instruction_17_in,
-    instruction_18_in,
-    instruction_19_in,
-    
-    instruction_20_in,
-    instruction_21_in,
-    instruction_22_in,
-    instruction_23_in,
-    instruction_24_in,
-    instruction_25_in,
-    instruction_26_in,
-    instruction_27_in,
-    instruction_28_in,
-    instruction_29_in,
-    
-    instruction_30_in,
-    instruction_31_in,
-    instruction_32_in,
-    instruction_33_in,
-    instruction_34_in,
-    instruction_35_in,
-    instruction_36_in,
-    instruction_37_in,
-    instruction_38_in,
-    instruction_39_in,
-    
-    instruction_40_in,
-    instruction_41_in,
-    instruction_42_in,
-    instruction_43_in,
-    instruction_44_in,
-    instruction_45_in,
-    instruction_46_in,
-    instruction_47_in,
-    instruction_48_in,
-    instruction_49_in,
-    
-    instruction_50_in,
-    instruction_51_in,
-    instruction_52_in,
-    instruction_53_in,
-    instruction_54_in,
-    instruction_55_in,
-    instruction_56_in,
-    instruction_57_in,
-    instruction_58_in,
-    instruction_59_in,
-
-    instruction_60_in,
-    instruction_61_in,
-    instruction_62_in,
-    instruction_63_in    
+    byte_0_in, byte_1_in, byte_2_in, byte_3_in, byte_4_in, byte_5_in, byte_6_in, byte_7_in, 
+	byte_8_in, byte_9_in, byte_10_in, byte_11_in, byte_12_in, byte_13_in, byte_14_in, byte_15_in, 
+	byte_16_in, byte_17_in, byte_18_in, byte_19_in, byte_20_in, byte_21_in, byte_22_in, byte_23_in,
+    byte_24_in, byte_25_in, byte_26_in, byte_27_in, byte_28_in, byte_29_in, byte_30_in, byte_31_in,
+    byte_32_in, byte_33_in, byte_34_in, byte_35_in, byte_36_in, byte_37_in, byte_38_in, byte_39_in,
+    byte_40_in, byte_41_in, byte_42_in, byte_43_in, byte_44_in, byte_45_in, byte_46_in, byte_47_in,
+	byte_48_in, byte_49_in, byte_50_in, byte_51_in, byte_52_in, byte_53_in, byte_54_in, byte_55_in,
+    byte_56_in, byte_57_in, byte_58_in, byte_59_in, byte_60_in, byte_61_in, byte_62_in, byte_63_in    
     : in std_logic_vector(7 downto 0);
     selecting_bits: in std_logic_vector(7 downto 0);
     selected_byte: out std_logic_vector(7 downto 0)
@@ -116,11 +54,36 @@ component ByteRegister is Port(
 );
 end component;
 
+component Subtracter is 
+    Port (
+        A : in  STD_LOGIC_VECTOR (7 downto 0);
+        B : in  STD_LOGIC_VECTOR (7 downto 0);
+        Difference : out  STD_LOGIC_VECTOR (7 downto 0);
+        Borrow : out  STD_LOGIC
+    );
+end component;
+
+component Adder8Bit is
+    Port (
+        A : in  STD_LOGIC_VECTOR (7 downto 0);
+        B : in  STD_LOGIC_VECTOR (7 downto 0);
+        Cin : in  STD_LOGIC;
+        Sum : out  STD_LOGIC_VECTOR (7 downto 0);
+        Cout : out  STD_LOGIC
+    );
+end component;
+
+component ShiftLeft is
+    Port ( Input : in std_logic_vector(7 downto 0);
+           Count : in std_logic_vector(7 downto 0);
+           Output : out std_logic_vector(7 downto 0));
+
 component AndEightBitByOneBit is Port(
     eight_bits: in std_logic_vector(7 downto 0);
     one_bit: in std_logic;
     output: out std_logic_vector(7 downto 0)
 );
+
 end component;
 
 signal 
@@ -134,12 +97,17 @@ signal
     not_a,
     a_opor_b,
     a_opxor_b,
-	
+
+    internal_debug_output,
+    subtracter_out,
+    adder_out,
+    shift_left_out
+  
     program_counter_in,
     program_counter_current_index,
     program_counter_incremented_index,
     program_counter_opcode,
-	program_counter_immediate,
+	  program_counter_immediate,
     program_counter_index_from_reg_a,
     program_counter_incremented_index_and,
 	
@@ -148,37 +116,41 @@ signal
     final_immediate_use_entered_immediate,
     final_immediate_use_pc_immediate,
     final_opcode_use_pc,
-	final_opcode_use_entered_opcode
-	
-    : std_logic_vector(7 downto 0) := "00000000";
-
+	  final_opcode_use_entered_opcode
+: std_logic_vector(7 downto 0) := "00000000";
+    
 signal 
     register_a_overwrite,
     register_b_overwrite,
-	
-	increment_program_counter,
+  
+	  increment_program_counter,
     program_counter_overwrite,
 	
     use_entered_opcode,
-	is_jump_instruction,
-	placeholder_bit
-    : std_logic := '0';
+	  is_jump_instruction,
+  
+    placeholder_bit
+: std_logic := '0';
 
 -- opcodes:
 -- 0    set A, imm
 -- 1    set A, B
 -- 2    set B, A
--- 3    set A, mem[imm]
--- 4    set mem[imm], A
+-- 3    set A, mem[A]
+-- 4    set mem[A], A
+-- 5    set B, imm
 
--- 5    add (A = A+B)
 -- 6    sub (A = A-B)
--- 7    shl B (A = A << B)
+-- 7    add (A = A+B)
 
 -- 8    and B (A = A and B)
 -- 9    or B (A = A or B)
 -- 10   not  (not A)
 -- 11   xor B (A = A xor B)
+
+
+-- 16   shl B
+-- 17   shr B
 
 -- 129  jmp A
 
@@ -186,6 +158,45 @@ begin
     debug_output <= program_counter_incremented_index_and;
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
+
+    internal_debug_output(0) <= register_a_overwrite;
+    --debug_output <= "00000000";
+
+    register_a_overwrite <= 
+			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))		-- 1
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))			-- 3
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 6
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (opcode(0)))			    -- 7
+		
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))		-- 8
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 9
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))				-- 11
+
+		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))				-- 11
+		
+	;
+    register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
+
+    register_b_overwrite <= 
+			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))		-- 2
+        or  ((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (not opcode(1)) and (opcode(0)))		    -- 5 
+	;
+    register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
+
+    to_register_a_input: Core_ByteMultiplexer port map(
+        immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
+        a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        opcode, 
+        register_a_in
+      );
 	
     use_entered_opcode <= not opcode(7);
 	
@@ -213,168 +224,18 @@ begin
     );
     final_opcode <= final_opcode_use_pc or final_opcode_use_entered_opcode;
     final_immediate <= final_immediate_use_pc_immediate or final_immediate_use_entered_immediate;
-
-	--
-
-    register_a_overwrite <= (not ((not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0))))
-                        and (not ((not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0))))
-                        and (not ((final_opcode(3)) and (final_opcode(2))));
-    register_a: ByteRegister port map(register_a_in, register_a_overwrite, clk, register_a_out);
-
-    register_b_overwrite <= (not (final_opcode(3)) and (not final_opcode(2)) and final_opcode(1) and (not final_opcode(0)));
-    register_b: ByteRegister port map(register_b_in, register_b_overwrite, clk, register_b_out);
-
-    to_register_a_input: Core_ByteMultiplexer port map(
-        final_immediate,
-        register_b_out,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-
-        a_opand_b,
-        a_opor_b,
-        not_a,
-        a_opxor_b,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        final_opcode,
-        register_a_in
-    );
     
     to_register_b_input: Core_ByteMultiplexer port map(
-        placeholder_byte,
-        placeholder_byte,
-        register_a_out,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
 
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        placeholder_byte,
-        
-        final_opcode,
+        placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, immediate, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,       
+        opcode, 
         register_b_in
     );
     
@@ -383,6 +244,10 @@ begin
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
     
+
+    adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
+    sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
+
 	-- program counter and ROM sectioon
     program_counter: ByteRegister port map(data_in => program_counter_in, 
                         overwrite => '1',
@@ -421,4 +286,5 @@ begin
 		immediate => program_counter_immediate
 	);
 
+    left_shift: ShiftLeft port map(Input => register_a_out, Count => register_b_out, Output => shift_left_out);
 end Structural;
