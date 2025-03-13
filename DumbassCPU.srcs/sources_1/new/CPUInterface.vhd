@@ -26,8 +26,8 @@ end component;
 
 component ProgramRom is Port(
     address : in std_logic_vector(7 downto 0);
-    output_msb : out std_logic_vector(7 downto 0);
-    output_lsb : out std_logic_vector(7 downto 0)
+    opcode : out std_logic_vector(7 downto 0);
+    immediate : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -129,26 +129,38 @@ signal
     register_a_out,
     register_b_in,
     register_b_out,
+	
     a_opand_b,
     not_a,
     a_opor_b,
     a_opxor_b,
+	
     program_counter_in,
     program_counter_current_index,
     program_counter_incremented_index,
     program_counter_opcode,
+	program_counter_immediate,
+    program_counter_index_from_reg_a,
+    program_counter_incremented_index_and,
+	
     final_opcode,
     final_immediate,
+    final_immediate_use_entered_immediate,
+    final_immediate_use_pc_immediate,
     final_opcode_use_pc,
-    final_opcode_use_entered_opcode
+	final_opcode_use_entered_opcode
+	
     : std_logic_vector(7 downto 0) := "00000000";
 
 signal 
     register_a_overwrite,
     register_b_overwrite,
-    program_counter_overwrite,
-    use_entered_opcode,
+	
 	increment_program_counter,
+    program_counter_overwrite,
+	
+    use_entered_opcode,
+	is_jump_instruction,
 	placeholder_bit
     : std_logic := '0';
 
@@ -171,15 +183,38 @@ signal
 -- 129  jmp A
 
 begin
-    debug_output <= final_opcode;
-    use_entered_opcode <= not opcode(7);
-    final_opcode_use_pc_opcode_8_and_1: AndEightBitByOneBit port map(eight_bits => program_counter_opcode, one_bit => opcode(7), output => final_opcode_use_pc);
-    final_opcode_use_entered_opcode_8_and_1: AndEightBitByOneBit port map(eight_bits => opcode, one_bit => use_entered_opcode, output => final_opcode_use_entered_opcode);
-     
-    final_opcode <= final_opcode_use_pc or final_opcode_use_entered_opcode;
-
+    debug_output <= program_counter_incremented_index_and;
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
+	
+    use_entered_opcode <= not opcode(7);
+	
+	-- deciding whether to use user entered opcode and immediate or the ones from ROM
+    final_opcode_use_pc_opcode_8_and_1: AndEightBitByOneBit port map(
+		eight_bits => program_counter_opcode, 
+		one_bit => opcode(7), 
+		output => final_opcode_use_pc
+	);
+    final_opcode_use_entered_opcode_8_and_1: AndEightBitByOneBit port map(
+		eight_bits => opcode, 
+		one_bit => use_entered_opcode, 
+		output => final_opcode_use_entered_opcode
+	);
+
+    final_immediate_use_entered_immediate_8_and_1: AndEightBitByOneBit port map(
+        eight_bits => immediate, 
+        one_bit => use_entered_opcode, 
+        output => final_immediate_use_entered_immediate
+    );     
+    final_immediate_use_pc_immediate_8_and_1: AndEightBitByOneBit port map(
+        eight_bits => program_counter_immediate, 
+        one_bit => opcode(7), 
+        output => final_immediate_use_pc_immediate
+    );
+    final_opcode <= final_opcode_use_pc or final_opcode_use_entered_opcode;
+    final_immediate <= final_immediate_use_pc_immediate or final_immediate_use_entered_immediate;
+
+	--
 
     register_a_overwrite <= (not ((not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0))))
                         and (not ((not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0))))
@@ -348,15 +383,18 @@ begin
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
     
+	-- program counter and ROM sectioon
     program_counter: ByteRegister port map(data_in => program_counter_in, 
-                        overwrite => opcode(7),
+                        overwrite => '1',
                         rising_edge_clk => clk,
                         data_out => program_counter_current_index              
     );
 
-	increment_program_counter <= opcode(7)
-									and (not ( (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)) ));	-- not jmp
-										
+	is_jump_instruction <= 
+	       ((final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))
+    ; 
+    increment_program_counter <= opcode(7) and not is_jump_instruction;
+
 	program_counter_increment: Adder8Bit port map(
 	   A => program_counter_current_index, 
 	   B => "00000000", 
@@ -364,12 +402,23 @@ begin
 	   Sum => program_counter_incremented_index, 
 	   Cout => placeholder_bit
     );
-	program_counter_use_increment_and: AndEightBitByOneBit port map(
-	   eight_bits => program_counter_current_index, 
+	program_counter_use_incremented_index_and: AndEightBitByOneBit port map(
+	   eight_bits => program_counter_incremented_index, 
 	   one_bit => increment_program_counter, 
-	   output => program_counter_incremented_index
+	   output => program_counter_incremented_index_and
 	);
-    program_counter_in <= ((final_opcode xor (not "10000001")) and register_a_out) or program_counter_incremented_index;
-    program_rom: ProgramRom port map(address => program_counter_current_index, output_msb => program_counter_opcode, output_lsb => final_immediate);
+	
+    use_register_a_as_pc_index_and: AndEightBitByOneBit port map(
+        eight_bits => register_a_out,
+        one_bit => is_jump_instruction,
+        output => program_counter_index_from_reg_a
+    );
+	
+    program_counter_in <= program_counter_index_from_reg_a or program_counter_incremented_index_and;
+    program_rom: ProgramRom port map(
+		address => program_counter_current_index, 
+		opcode => program_counter_opcode, 
+		immediate => program_counter_immediate
+	);
 
 end Structural;
