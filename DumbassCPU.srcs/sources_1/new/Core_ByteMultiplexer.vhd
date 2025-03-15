@@ -2,76 +2,14 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity Core_ByteMultiplexer is Port(
-    instruction_0_in, 
-    instruction_1_in, 
-    instruction_2_in, 
-    instruction_3_in, 
-    instruction_4_in, 
-    instruction_5_in, 
-    instruction_6_in,
-    instruction_7_in,
-    instruction_8_in,
-    instruction_9_in,
-    
-    instruction_10_in,
-    instruction_11_in,
-    instruction_12_in,
-    instruction_13_in,
-    instruction_14_in,
-    instruction_15_in,
-    instruction_16_in,
-    instruction_17_in,
-    instruction_18_in,
-    instruction_19_in,
-    
-    instruction_20_in,
-    instruction_21_in,
-    instruction_22_in,
-    instruction_23_in,
-    instruction_24_in,
-    instruction_25_in,
-    instruction_26_in,
-    instruction_27_in,
-    instruction_28_in,
-    instruction_29_in,
-    
-    instruction_30_in,
-    instruction_31_in,
-    instruction_32_in,
-    instruction_33_in,
-    instruction_34_in,
-    instruction_35_in,
-    instruction_36_in,
-    instruction_37_in,
-    instruction_38_in,
-    instruction_39_in,
-    
-    instruction_40_in,
-    instruction_41_in,
-    instruction_42_in,
-    instruction_43_in,
-    instruction_44_in,
-    instruction_45_in,
-    instruction_46_in,
-    instruction_47_in,
-    instruction_48_in,
-    instruction_49_in,
-    
-    instruction_50_in,
-    instruction_51_in,
-    instruction_52_in,
-    instruction_53_in,
-    instruction_54_in,
-    instruction_55_in,
-    instruction_56_in,
-    instruction_57_in,
-    instruction_58_in,
-    instruction_59_in,
-
-    instruction_60_in,
-    instruction_61_in,
-    instruction_62_in,
-    instruction_63_in    
+    byte_0_in, byte_1_in, byte_2_in, byte_3_in, byte_4_in, byte_5_in, byte_6_in, byte_7_in,
+    byte_8_in, byte_9_in, byte_10_in, byte_11_in, byte_12_in, byte_13_in, byte_14_in, byte_15_in,
+    byte_16_in, byte_17_in, byte_18_in, byte_19_in, byte_20_in, byte_21_in, byte_22_in, byte_23_in,
+    byte_24_in, byte_25_in, byte_26_in, byte_27_in, byte_28_in, byte_29_in, byte_30_in, byte_31_in,
+    byte_32_in, byte_33_in, byte_34_in, byte_35_in, byte_36_in, byte_37_in, byte_38_in, byte_39_in,
+    byte_40_in, byte_41_in, byte_42_in, byte_43_in, byte_44_in, byte_45_in, byte_46_in, byte_47_in,
+    byte_48_in, byte_49_in, byte_50_in, byte_51_in, byte_52_in, byte_53_in, byte_54_in, byte_55_in,
+    byte_56_in, byte_57_in, byte_58_in, byte_59_in, byte_60_in, byte_61_in, byte_62_in, byte_63_in
     : in std_logic_vector(7 downto 0);
     selecting_bits: in std_logic_vector(7 downto 0);
     selected_byte: out std_logic_vector(7 downto 0)
@@ -80,100 +18,100 @@ end Core_ByteMultiplexer;
 
 architecture Structural of Core_ByteMultiplexer is
 
-constant LAST_INSTRUCTION: integer := 63;
+constant LAST_byte: integer := 63;
 
 component Core_BitMultiplexer is Port(
-    input_bits: in std_logic_vector (LAST_INSTRUCTION downto 0);
+    input_bits: in std_logic_vector (LAST_byte downto 0);
     selecting_bits: in std_Logic_vector (7 downto 0);
     selected_bit: out std_logic
 );
 end component;
 
 
-type GroupedByInstruction is array(LAST_INSTRUCTION downto 0) of std_logic_vector(7 downto 0);
-signal grouped_by_instruction: GroupedByInstruction;
+type GroupedBybyte is array(LAST_byte downto 0) of std_logic_vector(7 downto 0);
+signal grouped_by_byte: GroupedBybyte;
 
-type GroupedByBitOrder is array(7 downto 0) of std_logic_vector(LAST_INSTRUCTION downto 0);
+type GroupedByBitOrder is array(7 downto 0) of std_logic_vector(LAST_byte downto 0);
 signal grouped_by_bit_order: GroupedByBitOrder;
 
 begin
-	grouped_by_instruction(LAST_INSTRUCTION) <= instruction_63_in;
-	grouped_by_instruction(62) <= instruction_62_in;
-	grouped_by_instruction(61) <= instruction_61_in;
-	grouped_by_instruction(60) <= instruction_60_in;
+	grouped_by_byte(LAST_byte) <= byte_63_in;
+	grouped_by_byte(62) <= byte_62_in;
+	grouped_by_byte(61) <= byte_61_in;
+	grouped_by_byte(60) <= byte_60_in;
 
-	grouped_by_instruction(59) <= instruction_59_in;
-	grouped_by_instruction(58) <= instruction_58_in;
-	grouped_by_instruction(57) <= instruction_57_in;
-	grouped_by_instruction(56) <= instruction_56_in;
-	grouped_by_instruction(55) <= instruction_55_in;
-	grouped_by_instruction(54) <= instruction_54_in;
-	grouped_by_instruction(53) <= instruction_53_in;
-	grouped_by_instruction(52) <= instruction_52_in;
-	grouped_by_instruction(51) <= instruction_51_in;
-	grouped_by_instruction(50) <= instruction_50_in;
+	grouped_by_byte(59) <= byte_59_in;
+	grouped_by_byte(58) <= byte_58_in;
+	grouped_by_byte(57) <= byte_57_in;
+	grouped_by_byte(56) <= byte_56_in;
+	grouped_by_byte(55) <= byte_55_in;
+	grouped_by_byte(54) <= byte_54_in;
+	grouped_by_byte(53) <= byte_53_in;
+	grouped_by_byte(52) <= byte_52_in;
+	grouped_by_byte(51) <= byte_51_in;
+	grouped_by_byte(50) <= byte_50_in;
 
-	grouped_by_instruction(49) <= instruction_49_in;
-	grouped_by_instruction(48) <= instruction_48_in;
-	grouped_by_instruction(47) <= instruction_47_in;
-	grouped_by_instruction(46) <= instruction_46_in;
-	grouped_by_instruction(45) <= instruction_45_in;
-	grouped_by_instruction(44) <= instruction_44_in;
-	grouped_by_instruction(43) <= instruction_43_in;
-	grouped_by_instruction(42) <= instruction_42_in;
-	grouped_by_instruction(41) <= instruction_41_in;
-	grouped_by_instruction(40) <= instruction_40_in;
+	grouped_by_byte(49) <= byte_49_in;
+	grouped_by_byte(48) <= byte_48_in;
+	grouped_by_byte(47) <= byte_47_in;
+	grouped_by_byte(46) <= byte_46_in;
+	grouped_by_byte(45) <= byte_45_in;
+	grouped_by_byte(44) <= byte_44_in;
+	grouped_by_byte(43) <= byte_43_in;
+	grouped_by_byte(42) <= byte_42_in;
+	grouped_by_byte(41) <= byte_41_in;
+	grouped_by_byte(40) <= byte_40_in;
 
-	grouped_by_instruction(39) <= instruction_39_in;
-	grouped_by_instruction(38) <= instruction_38_in;
-	grouped_by_instruction(37) <= instruction_37_in;
-	grouped_by_instruction(36) <= instruction_36_in;
-	grouped_by_instruction(35) <= instruction_35_in;
-	grouped_by_instruction(34) <= instruction_34_in;
-	grouped_by_instruction(33) <= instruction_33_in;
-	grouped_by_instruction(32) <= instruction_32_in;
-	grouped_by_instruction(31) <= instruction_31_in;
-	grouped_by_instruction(30) <= instruction_30_in;
+	grouped_by_byte(39) <= byte_39_in;
+	grouped_by_byte(38) <= byte_38_in;
+	grouped_by_byte(37) <= byte_37_in;
+	grouped_by_byte(36) <= byte_36_in;
+	grouped_by_byte(35) <= byte_35_in;
+	grouped_by_byte(34) <= byte_34_in;
+	grouped_by_byte(33) <= byte_33_in;
+	grouped_by_byte(32) <= byte_32_in;
+	grouped_by_byte(31) <= byte_31_in;
+	grouped_by_byte(30) <= byte_30_in;
 
-	grouped_by_instruction(29) <= instruction_29_in;
-	grouped_by_instruction(28) <= instruction_28_in;
-	grouped_by_instruction(27) <= instruction_27_in;
-	grouped_by_instruction(26) <= instruction_26_in;
-	grouped_by_instruction(25) <= instruction_25_in;
-	grouped_by_instruction(24) <= instruction_24_in;
-	grouped_by_instruction(23) <= instruction_23_in;
-	grouped_by_instruction(22) <= instruction_22_in;
-	grouped_by_instruction(21) <= instruction_21_in;
-	grouped_by_instruction(20) <= instruction_20_in;
+	grouped_by_byte(29) <= byte_29_in;
+	grouped_by_byte(28) <= byte_28_in;
+	grouped_by_byte(27) <= byte_27_in;
+	grouped_by_byte(26) <= byte_26_in;
+	grouped_by_byte(25) <= byte_25_in;
+	grouped_by_byte(24) <= byte_24_in;
+	grouped_by_byte(23) <= byte_23_in;
+	grouped_by_byte(22) <= byte_22_in;
+	grouped_by_byte(21) <= byte_21_in;
+	grouped_by_byte(20) <= byte_20_in;
 
-	grouped_by_instruction(19) <= instruction_19_in;
-	grouped_by_instruction(18) <= instruction_18_in;
-	grouped_by_instruction(17) <= instruction_17_in;
-	grouped_by_instruction(16) <= instruction_16_in;
-	grouped_by_instruction(15) <= instruction_15_in;
-	grouped_by_instruction(14) <= instruction_14_in;
-	grouped_by_instruction(13) <= instruction_13_in;
-	grouped_by_instruction(12) <= instruction_12_in;
-	grouped_by_instruction(11) <= instruction_11_in;
-	grouped_by_instruction(10) <= instruction_10_in;
+	grouped_by_byte(19) <= byte_19_in;
+	grouped_by_byte(18) <= byte_18_in;
+	grouped_by_byte(17) <= byte_17_in;
+	grouped_by_byte(16) <= byte_16_in;
+	grouped_by_byte(15) <= byte_15_in;
+	grouped_by_byte(14) <= byte_14_in;
+	grouped_by_byte(13) <= byte_13_in;
+	grouped_by_byte(12) <= byte_12_in;
+	grouped_by_byte(11) <= byte_11_in;
+	grouped_by_byte(10) <= byte_10_in;
     
-	grouped_by_instruction(9) <= instruction_9_in;
-	grouped_by_instruction(8) <= instruction_8_in;
-	grouped_by_instruction(7) <= instruction_7_in;
-	grouped_by_instruction(6) <= instruction_6_in;
-	grouped_by_instruction(5) <= instruction_5_in;
-	grouped_by_instruction(4) <= instruction_4_in;
-	grouped_by_instruction(3) <= instruction_3_in;
-	grouped_by_instruction(2) <= instruction_2_in;
-	grouped_by_instruction(1) <= instruction_1_in;
-	grouped_by_instruction(0) <= instruction_0_in;
+	grouped_by_byte(9) <= byte_9_in;
+	grouped_by_byte(8) <= byte_8_in;
+	grouped_by_byte(7) <= byte_7_in;
+	grouped_by_byte(6) <= byte_6_in;
+	grouped_by_byte(5) <= byte_5_in;
+	grouped_by_byte(4) <= byte_4_in;
+	grouped_by_byte(3) <= byte_3_in;
+	grouped_by_byte(2) <= byte_2_in;
+	grouped_by_byte(1) <= byte_1_in;
+	grouped_by_byte(0) <= byte_0_in;
 
     -- not coding 256*8 lines ok, vhdl sucks more than wiring shit up
-	proc: process(grouped_by_instruction) is
+	proc: process(grouped_by_byte) is
 	begin
-		for instruction in 0 to LAST_INSTRUCTION loop
+		for byte in 0 to LAST_byte loop
 			for gbit in 0 to 7 loop
-				grouped_by_bit_order(gbit)(instruction) <= grouped_by_instruction(instruction)(gbit);
+				grouped_by_bit_order(gbit)(byte) <= grouped_by_byte(byte)(gbit);
 			end loop;
 		end loop;
 	end process proc;
