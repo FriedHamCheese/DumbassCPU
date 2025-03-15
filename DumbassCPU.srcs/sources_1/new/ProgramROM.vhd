@@ -11,14 +11,14 @@ end ProgramRom;
 architecture Structural of ProgramRom is
 
 component Core_ByteMultiplexer is Port(
-    instruction_0_in, instruction_1_in, instruction_2_in, instruction_3_in, instruction_4_in, instruction_5_in, instruction_6_in, instruction_7_in,
-    instruction_8_in, instruction_9_in, instruction_10_in, instruction_11_in, instruction_12_in, instruction_13_in, instruction_14_in, instruction_15_in,
-    instruction_16_in, instruction_17_in, instruction_18_in, instruction_19_in, instruction_20_in, instruction_21_in, instruction_22_in, instruction_23_in,
-    instruction_24_in, instruction_25_in, instruction_26_in, instruction_27_in, instruction_28_in, instruction_29_in, instruction_30_in, instruction_31_in,
-    instruction_32_in, instruction_33_in, instruction_34_in, instruction_35_in, instruction_36_in, instruction_37_in, instruction_38_in, instruction_39_in,
-    instruction_40_in, instruction_41_in, instruction_42_in, instruction_43_in, instruction_44_in, instruction_45_in, instruction_46_in, instruction_47_in,
-    instruction_48_in, instruction_49_in, instruction_50_in, instruction_51_in, instruction_52_in, instruction_53_in, instruction_54_in, instruction_55_in,
-    instruction_56_in, instruction_57_in, instruction_58_in, instruction_59_in, instruction_60_in, instruction_61_in, instruction_62_in, instruction_63_in    
+    byte_0_in, byte_1_in, byte_2_in, byte_3_in, byte_4_in, byte_5_in, byte_6_in, byte_7_in,
+    byte_8_in, byte_9_in, byte_10_in, byte_11_in, byte_12_in, byte_13_in, byte_14_in, byte_15_in,
+    byte_16_in, byte_17_in, byte_18_in, byte_19_in, byte_20_in, byte_21_in, byte_22_in, byte_23_in,
+    byte_24_in, byte_25_in, byte_26_in, byte_27_in, byte_28_in, byte_29_in, byte_30_in, byte_31_in,
+    byte_32_in, byte_33_in, byte_34_in, byte_35_in, byte_36_in, byte_37_in, byte_38_in, byte_39_in,
+    byte_40_in, byte_41_in, byte_42_in, byte_43_in, byte_44_in, byte_45_in, byte_46_in, byte_47_in,
+    byte_48_in, byte_49_in, byte_50_in, byte_51_in, byte_52_in, byte_53_in, byte_54_in, byte_55_in,
+    byte_56_in, byte_57_in, byte_58_in, byte_59_in, byte_60_in, byte_61_in, byte_62_in, byte_63_in    
     : in std_logic_vector(7 downto 0);
     selecting_bits: in std_logic_vector(7 downto 0);
     selected_byte: out std_logic_vector(7 downto 0)
@@ -27,9 +27,30 @@ end component;
 
 begin
 
+-- 0
+-- set A, 0     00000000, 00000000
+-- set B, 1     00000101, 00000001
+-- add A, B     00000111
+-- add A, B     00000111
+-- add A, B     00000111
+-- add A, B     00000111
+-- add A, B     00000111
+-- add A, B     00000111
+-- A = 6
+-- 8
+-- shl A, B     00010000
+-- shl A, B     00010000
+-- shl A, B     00010000
+-- shl A, B     00010000
+-- shl A, B     00010000
+-- shl A, B     00010000 (overflow)
+-- set A, 0     00000000, 00000000
+-- jmp A        10000001
+-- 16
+
 opcode_selector: Core_ByteMultiplexer port map(
-    "00000000", "00000010", "00000000", "00001000", "00000000", "10000001", "00000000", "00000000",  
-    "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",    
+    "00000000", "00000101", "00000111", "00000111", "00000111", "00000111", "00000111", "00000111",  
+    "00010000", "00010000", "00010000", "00010000", "00010000", "00010000", "00000000", "10000001",    
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",     
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",  
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",  
@@ -40,7 +61,7 @@ opcode_selector: Core_ByteMultiplexer port map(
 );
 
 immediate_selector: Core_ByteMultiplexer port map(
-    "10101010", "00000000", "11111111", "00000000", "00000000", "00000000", "00000000", "00000000",  
+    "00000000", "00000001", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",  
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",    
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",     
     "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",  

@@ -63,27 +63,17 @@ component Subtracter is
     );
 end component;
 
-component Adder8Bit is
-    Port (
-        A : in  STD_LOGIC_VECTOR (7 downto 0);
-        B : in  STD_LOGIC_VECTOR (7 downto 0);
-        Cin : in  STD_LOGIC;
-        Sum : out  STD_LOGIC_VECTOR (7 downto 0);
-        Cout : out  STD_LOGIC
-    );
-end component;
-
 component ShiftLeft is
     Port ( Input : in std_logic_vector(7 downto 0);
            Count : in std_logic_vector(7 downto 0);
            Output : out std_logic_vector(7 downto 0));
+end component;
 
 component AndEightBitByOneBit is Port(
     eight_bits: in std_logic_vector(7 downto 0);
     one_bit: in std_logic;
     output: out std_logic_vector(7 downto 0)
 );
-
 end component;
 
 signal 
@@ -101,13 +91,13 @@ signal
     internal_debug_output,
     subtracter_out,
     adder_out,
-    shift_left_out
+    shift_left_out,
   
     program_counter_in,
     program_counter_current_index,
     program_counter_incremented_index,
     program_counter_opcode,
-	  program_counter_immediate,
+    program_counter_immediate,
     program_counter_index_from_reg_a,
     program_counter_incremented_index_and,
 	
@@ -116,7 +106,7 @@ signal
     final_immediate_use_entered_immediate,
     final_immediate_use_pc_immediate,
     final_opcode_use_pc,
-	  final_opcode_use_entered_opcode
+    final_opcode_use_entered_opcode
 : std_logic_vector(7 downto 0) := "00000000";
     
 signal 
@@ -152,51 +142,17 @@ signal
 -- 16   shl B
 -- 17   shr B
 
+-- 64   set pc, A (not implemented)
+
 -- 129  jmp A
 
 begin
-    debug_output <= program_counter_incremented_index_and;
+    debug_output <= program_counter_opcode;
     debug_output_reg_a <= register_a_out;
     debug_output_reg_b <= register_b_out;
 
     internal_debug_output(0) <= register_a_overwrite;
     --debug_output <= "00000000";
-
-    register_a_overwrite <= 
-			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))	-- 0
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))		-- 1
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))			-- 3
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 6
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (opcode(1)) and (opcode(0)))			    -- 7
-		
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))		-- 8
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (not opcode(1)) and (opcode(0)))			-- 9
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))			-- 10
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (opcode(3)) and (not opcode(2)) and (opcode(1)) and (opcode(0)))				-- 11
-
-		or 	((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (opcode(4)) and (not opcode(3)) and (not opcode(2)) and (not opcode(1)) and (not opcode(0)))				-- 11
-		
-	;
-    register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
-
-    register_b_overwrite <= 
-			((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (not opcode(2)) and (opcode(1)) and (not opcode(0)))		-- 2
-        or  ((not opcode(7)) and (not opcode(6)) and (not opcode(5)) and (not opcode(4)) and (not opcode(3)) and (opcode(2)) and (not opcode(1)) and (opcode(0)))		    -- 5 
-	;
-    register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
-
-    to_register_a_input: Core_ByteMultiplexer port map(
-        immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
-        a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        opcode, 
-        register_a_in
-      );
 	
     use_entered_opcode <= not opcode(7);
 	
@@ -225,9 +181,46 @@ begin
     final_opcode <= final_opcode_use_pc or final_opcode_use_entered_opcode;
     final_immediate <= final_immediate_use_pc_immediate or final_immediate_use_entered_immediate;
     
+    --
+    
+    register_a_overwrite <= 
+			((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))	-- 0
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))		-- 1
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))			-- 3
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0)))			-- 6
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))			    -- 7
+		
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))		-- 8
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))			-- 9
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0)))			-- 10
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))				-- 11
+
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))		-- 16
+	;
+    register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
+
+    register_b_overwrite <= 
+			((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0)))		-- 2
+        or  ((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))		    -- 5 
+	;
+    register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
+
+    to_register_a_input: Core_ByteMultiplexer port map(
+        final_immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
+        a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        final_opcode, 
+        register_a_in
+      );    
+    
     to_register_b_input: Core_ByteMultiplexer port map(
 
-        placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, immediate, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, final_immediate, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -235,7 +228,7 @@ begin
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,       
-        opcode, 
+        final_opcode, 
         register_b_in
     );
     
