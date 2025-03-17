@@ -76,12 +76,24 @@ component AndEightBitByOneBit is Port(
 );
 end component;
 
+component memory16x8 is
+    Port (
+        clk  : in  STD_LOGIC;
+        we   : in  STD_LOGIC;  -- Write Enable
+        addr : in  STD_LOGIC_VECTOR(3 downto 0);
+        din  : in  STD_LOGIC_VECTOR(7 downto 0);
+        dout : out STD_LOGIC_VECTOR(7 downto 0)
+    );
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
     register_a_out,
     register_b_in,
     register_b_out,
+	
+	ram_output,
 	
     a_opand_b,
     not_a,
@@ -113,7 +125,9 @@ signal
     register_a_overwrite,
     register_b_overwrite,
   
-	  increment_program_counter,
+    write_to_ram,
+  
+	increment_program_counter,
     program_counter_overwrite,
 	
     use_entered_opcode,
@@ -127,7 +141,7 @@ signal
 -- 1    set A, B
 -- 2    set B, A
 -- 3    set A, mem[A]
--- 4    set mem[A], A
+-- 4    set mem[A], B
 -- 5    set B, imm
 
 -- 6    sub (A = A-B)
@@ -206,7 +220,7 @@ begin
     register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
 
     to_register_a_input: Core_ByteMultiplexer port map(
-        final_immediate, register_b_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
+        final_immediate, register_b_out, placeholder_byte, ram_output, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
         a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -240,6 +254,10 @@ begin
 
     adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
+    
+    
+    write_to_ram <= ((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)));
+    ram: memory16x8 port map(clk => clk, we => write_to_ram, addr => register_a_out(3 downto 0), din => register_b_out, dout => ram_output);
 
 	-- program counter and ROM sectioon
     program_counter: ByteRegister port map(data_in => program_counter_in, 

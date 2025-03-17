@@ -53,10 +53,24 @@ begin
         wait for 100ns;
         opcode <= "00000001";
         wait for 100ns;
-        assert(debug_output_reg_a = "10101010");        
+        assert(debug_output_reg_a = "10101010");            
         
-        -- set A, mem[A]
-        -- set mem[A], A
+        -- set mem[A], B
+        opcode <= "00000000";
+        immediate <= "00001000";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "01000101";
+        wait for 100ns;
+        opcode <= "00000100";
+        wait for 100ns;
+        -- + set A, mem[A]
+        opcode <= "00000000";
+        immediate <= "00001000";
+        wait for 100ns;
+        opcode <= "00000011";
+        wait for 100ns;
+        assert(debug_output_reg_a = "01000101");
     
         -- sub (11111111 - 10101010 = 01010101)
         opcode <= "00000101";
