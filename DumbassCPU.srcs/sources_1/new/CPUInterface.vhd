@@ -131,7 +131,7 @@ signal
     program_counter_overwrite,
 	
     use_entered_opcode,
-	  is_jump_instruction,
+    is_jump_instruction,
   
     placeholder_bit
 : std_logic := '0';
