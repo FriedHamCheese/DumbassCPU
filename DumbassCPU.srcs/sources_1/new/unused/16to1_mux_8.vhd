@@ -1,30 +1,30 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity mux_16to1_8 is
+entity mux_16to1 is
     Port (
-        data_in : in  STD_LOGIC_VECTOR(127 downto 0); -- 16 words × 8 bits = 128 bits
-        sel     : in  STD_LOGIC_VECTOR(15 downto 0);  -- one-hot selection from the decoder
-        data_out: out STD_LOGIC_VECTOR(7 downto 0)    -- 8-bit output
+        data_in : in  STD_LOGIC_VECTOR(127 downto 0); -- 16 words x 8 bits = 128 bits
+        sel     : in  STD_LOGIC_VECTOR(15 downto 0);  -- one-hot select signals (only one high)
+        data_out: out STD_LOGIC_VECTOR(7 downto 0)     -- 8-bit output
     );
-end mux_16to1_8;
+end mux_16to1;
 
-architecture Dataflow of mux_16to1 is
+architecture Dataflow of mux_16to1_8 is
 
-    -- Component: ANDs an 8-bit vector with a single bit.
+    -- This component ANDs an 8-bit vector with a one-bit control.
     component AndEightBitByOneBit is
-        Port (
+        Port(
             eight_bits : in  STD_LOGIC_VECTOR(7 downto 0);
             one_bit    : in  STD_LOGIC;
             output     : out STD_LOGIC_VECTOR(7 downto 0)
         );
     end component;
     
-    -- This signal will collect the outputs from each AND gate.
-    signal and_outputs : STD_LOGIC_VECTOR(128-1 downto 0);
+    -- This signal collects the outputs from each AND block.
+    signal and_outputs : STD_LOGIC_VECTOR(127 downto 0);
     
 begin
-    -- Instantiate 16 AND blocks (one per register word)
+    -- Generates 16 blocks.
     gen_and: for i in 0 to 15 generate
         and_inst: AndEightBitByOneBit
             port map(
@@ -34,7 +34,7 @@ begin
             );
     end generate;
 
-    -- Now OR all 16 8-bit words together.
+    -- 16 8-bit outputs altogether. Only one of these should be HIGH at a single moment. So... hopefully should output correctly.
     data_out <= and_outputs(7 downto 0) or
                 and_outputs(15 downto 8) or
                 and_outputs(23 downto 16) or
@@ -53,10 +53,6 @@ begin
                 and_outputs(127 downto 120);
 
 end Dataflow;
-
-
-
-
 
 
 

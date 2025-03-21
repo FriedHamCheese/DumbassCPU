@@ -3,13 +3,13 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity mux_16to1 is
     Port (
-        data_in : in  STD_LOGIC_VECTOR(127 downto 0); -- 16 words × 8 bits = 128 bits
+        data_in : in  STD_LOGIC_VECTOR(127 downto 0); -- 16 words x 8 bits = 128 bits
         sel     : in  STD_LOGIC_VECTOR(15 downto 0);  -- one-hot select signals (only one high)
         data_out: out STD_LOGIC_VECTOR(7 downto 0)     -- 8-bit output
     );
 end mux_16to1;
 
-architecture Dataflow of mux_16to1_8 is
+architecture Dataflow of mux_16to1 is
 
     -- This component ANDs an 8-bit vector with a one-bit control.
     component AndEightBitByOneBit is
