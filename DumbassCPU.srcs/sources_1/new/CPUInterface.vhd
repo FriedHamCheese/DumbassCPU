@@ -6,9 +6,14 @@ entity CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
-    debug_output,
-    debug_output_reg_b
-    : out std_logic_vector(7 downto 0)
+    debug_output_reg_b,
+    debug_output
+    : out std_logic_vector(7 downto 0);
+    
+    a_equal_b,
+    a_greater_b,
+    a_lesser_b
+    : out std_logic
 );
 end CPUInterface;
 
@@ -84,6 +89,13 @@ component memory16x8 is
         din  : in  STD_LOGIC_VECTOR(7 downto 0);
         dout : out STD_LOGIC_VECTOR(7 downto 0)
     );
+end component;
+
+component ByteComparator is Port(
+	a, b: in std_logic_vector (7 downto 0);
+	equal, greater, lesser
+	: out std_logic
+);
 end component;
 
 signal 
@@ -255,9 +267,15 @@ begin
     adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
     
-    
     write_to_ram <= ((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)));
     ram: memory16x8 port map(clk => clk, we => write_to_ram, addr => register_a_out(3 downto 0), din => register_b_out, dout => ram_output);
+
+    comparator: ByteComparator port map(
+        a => register_a_out, b => register_b_out, 
+        equal => a_equal_b, 
+        greater => a_greater_b, 
+        lesser => a_lesser_b
+    );
 
 	-- program counter and ROM sectioon
     program_counter: ByteRegister port map(data_in => program_counter_in, 

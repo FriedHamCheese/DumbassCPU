@@ -8,7 +8,12 @@ entity CPUInterfaceWithSevenSeg is Port(
     input_opcode: in std_logic_vector(7 downto 0);
     input_immediate: in std_logic_vector(7 downto 0);
 	seven_seg_led : out STD_LOGIC_VECTOR(6 downto 0);
-	seven_seg_on : out STD_LOGIC_VECTOR(3 downto 0)
+	seven_seg_on : out STD_LOGIC_VECTOR(3 downto 0);
+	a_equal_b,
+	a_greater_b, 
+	a_lesser_b
+	: out std_logic
+	
 );
 end CPUInterfaceWithSevenSeg;
 
@@ -21,7 +26,12 @@ component CPUInterface is Port(
     debug_output_reg_a,
     debug_output,
     debug_output_reg_b
-    : out std_logic_vector(7 downto 0)
+    : out std_logic_vector(7 downto 0);
+    
+    a_equal_b,
+    a_greater_b,
+    a_lesser_b
+    : out std_logic
 );
 end component;
 
@@ -48,7 +58,10 @@ begin
 		immediate => input_immediate, 
 		debug_output_reg_a => register_a_out,
 		debug_output_reg_b => register_b_out,
-		debug_output => placeholder_byte
+		debug_output => placeholder_byte,
+		a_equal_b => a_equal_b,
+		a_greater_b => a_greater_b,
+		a_lesser_b => a_lesser_b
 	);
 	
 	seven_seg: SevenSeg port map(

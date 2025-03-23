@@ -12,17 +12,42 @@ component CPUInterface is Port(
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
     debug_output_reg_a,
-    debug_output_reg_b
-    --,debug_output
-    : out std_logic_vector(7 downto 0)
+    debug_output_reg_b,
+    debug_output
+    : out std_logic_vector(7 downto 0);
+    
+    a_equal_b,
+    a_greater_b,
+    a_lesser_b
+    : out std_logic
 );
 end component;
 
-signal opcode, immediate, debug_output_reg_a, debug_output_reg_b, debug_output: std_logic_vector(7 downto 0);
-signal clk: std_logic;
+signal 
+    opcode, 
+    immediate, 
+    debug_output_reg_a, 
+    debug_output_reg_b, 
+    debug_output: std_logic_vector(7 downto 0);
+    
+signal 
+    clk,
+    a_equal_b,
+    a_greater_b,
+    a_lesser_b
+: std_logic;
 
 begin
-    cpu: CPUInterface port map(clk, opcode, immediate, debug_output_reg_a, debug_output_reg_b--, debug_output
+    cpu: CPUInterface port map(
+        clk => clk, 
+        opcode => opcode, 
+        immediate => immediate, 
+        debug_output_reg_a => debug_output_reg_a, 
+        debug_output_reg_b => debug_output_reg_b, 
+        debug_output => debug_output,
+        a_equal_b => a_equal_b,
+        a_greater_b => a_greater_b,
+        a_lesser_b => a_lesser_b
     );
 
     proc: process is
@@ -145,6 +170,35 @@ begin
         opcode <= "00010000";
         wait for 100ns;
         assert (debug_output_reg_a = "10010000");
+        
+        
+        -- test comparator results
+        -- a == b
+        opcode <= "00000000";
+        immediate <= "10101010";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "10101010";
+        wait for 100ns;
+        assert (a_equal_b = '1' and a_greater_b = '0' and a_lesser_b = '0');
+        
+        -- a > b
+        opcode <= "00000000";
+        immediate <= "01000001";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "01000000";
+        wait for 100ns;
+        assert (a_equal_b = '0' and a_greater_b = '1' and a_lesser_b = '0');
+        
+        -- a < b
+        opcode <= "00000000";
+        immediate <= "00010101";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "01000000";
+        wait for 100ns;
+        assert (a_equal_b = '0' and a_greater_b = '0' and a_lesser_b = '1');
     wait;
     end process proc;
 end Behavioral;
