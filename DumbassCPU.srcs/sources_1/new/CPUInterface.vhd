@@ -98,6 +98,18 @@ component ByteComparator is Port(
 );
 end component;
 
+component ShiftRight is
+    Port ( Input : in std_logic_vector(7 downto 0);
+           Count : in std_logic_vector(7 downto 0);
+           Output : out std_logic_vector(7 downto 0));
+end component;
+
+component RoughDivide is
+    Port ( Dividend : in std_logic_vector(7 downto 0);
+           Divisor : in std_logic_vector(7 downto 0);
+           Quotient : out std_logic_vector(7 downto 0));
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -117,6 +129,8 @@ signal
     subtracter_out,
     adder_out,
     shift_left_out,
+    shift_right_result,
+    rough_divide_out,
   
     program_counter_in,
     program_counter_current_index,
@@ -168,6 +182,8 @@ signal
 
 -- 16   shl B
 -- 17   shr B
+-- 18   mul A, B
+-- 19   rdiv A, b
 
 -- 62	nop
 -- 63   set pc, A
@@ -224,6 +240,8 @@ begin
 		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))				-- 11
 
 		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))		-- 16
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))		    -- 17
+        or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))		    -- 19
 	;
     register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
 
@@ -237,7 +255,7 @@ begin
     to_register_a_input: Core_ByteMultiplexer port map(
         final_immediate, register_b_out, placeholder_byte, ram_output, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
         a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        shift_left_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        shift_left_out, shift_right_result, placeholder_byte, rough_divide_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -276,6 +294,9 @@ begin
 
     adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
+    left_shift: ShiftLeft port map(Input => register_a_out, Count => register_b_out, Output => shift_left_out);
+    right_shift: ShiftRight port map(Input => register_a_out, Count => register_b_out, Output => shift_right_result);
+    rough_divide: RoughDivide port map(Dividend => register_a_out, Divisor => register_b_out, Quotient => rough_divide_out);
     
     write_to_ram <= ((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)));
     ram: memory16x8 port map(clk => clk, we => write_to_ram, addr => register_a_out(3 downto 0), din => register_b_out, dout => ram_output);
@@ -326,5 +347,4 @@ begin
 		immediate => program_counter_immediate
 	);
 
-    left_shift: ShiftLeft port map(Input => register_a_out, Count => register_b_out, Output => shift_left_out);
 end Structural;

@@ -187,6 +187,28 @@ begin
         wait for 100ns;
         assert (debug_output_reg_a = "10010000");
         
+        -- shr B (10100101 << 5 = 00000101)
+        opcode <= "00000000";
+        immediate <= "10100101";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "00000101";
+        wait for 100ns;
+        opcode <= "00010001";
+        wait for 100ns;
+        assert (debug_output_reg_a = "00000101");   
+        
+        -- rdiv A, B (01110101 ~/ 7 = 00011101)
+        opcode <= "00000000";
+        immediate <= "01110101";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "00000111";
+        wait for 100ns;
+        opcode <= "00010011";
+        wait for 100ns;
+        assert (debug_output_reg_a = "00011101");           
+        
         
         -- test comparator results
         -- a == b
