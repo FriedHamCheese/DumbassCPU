@@ -158,7 +158,23 @@ begin
         wait for 100ns;
         opcode <= "00001011";
         wait for 100ns;
-        assert(debug_output_reg_a = "00000000");          
+        assert(debug_output_reg_a = "00000000");  
+        
+        -- prop B, 0
+        opcode <= "00000101";
+        immediate <= "10101010";
+        wait for 100ns;
+        opcode <= "00001100";
+        wait for 100ns;
+        assert(debug_output_reg_b = "00000000");
+        
+        opcode <= "00000101";
+        immediate <= "00010101";
+        wait for 100ns;
+        opcode <= "00001100";
+        wait for 100ns;
+        assert(debug_output_reg_b = "11111111");               
+        
         
         -- shl B (11010010 << 3 = 10010000)
         opcode <= "00000000";

@@ -27,26 +27,80 @@ end component;
 
 begin
 
+-- opcodes:
+-- 0    set A, imm
+-- 1    set A, B
+-- 2    set B, A
+-- 3    set A, mem[A]
+-- 4    set mem[A], B
+-- 5    set B, imm
+
+-- 6    sub (A = A-B)
+-- 7    add (A = A+B)
+
+-- 8    and B (A = A and B)
+-- 9    or B (A = A or B)
+-- 10   not  (not A)
+-- 11   xor B (A = A xor B)
+-- 12 	prop B, 0
+
+-- 16   shl B
+-- 17   shr B
+
+-- 62	nop
+-- 63   set pc, A (not implemented)
+
+-- 129  jmp A
+
+
+-- ; inputs: mem[0] x mem[1]
+-- ; output: mem[2] as product
+-- 
 -- 0
--- set A, 0     00000000, 00000000
--- set B, 1     00000101, 00000001
--- add A, B     00000111
--- add A, B     00000111
--- add A, B     00000111
--- add A, B     00000111
--- add A, B     00000111
--- add A, B     00000111
--- A = 6
+-- ; loop:
+-- set A, 0
+-- set A, mem[A]
+-- set B, 1
+-- shl A, B
+-- set B, A
+-- set A, 0
+-- set mem[A], B
+-- nop
+
 -- 8
--- shl A, B     00010000
--- shl A, B     00010000
--- shl A, B     00010000
--- shl A, B     00010000
--- shl A, B     00010000
--- shl A, B     00010000 (overflow)
--- set A, 0     00000000, 00000000
--- jmp A        10000001
+-- set A, 1
+-- set A, mem[A]
+-- set B, 1
+-- shr A, B
+-- set B, A
+-- set A, 1
+-- set mem[A], B
+-- nop
+
 -- 16
+-- set A, 1
+-- set A, mem[A]
+-- set B, A
+-- set A, 0
+-- set A, mem[A]
+-- nop
+-- nop
+-- nop
+
+-- 24
+-- prop B, 15
+-- and A, B
+-- set B, A
+-- set A, 2			; accumulated sum
+-- set A, mem[A]
+-- add A, B
+-- set B, A			; save new sum in B
+-- set A, 2
+
+-- 32
+-- set mem[A], B
+-- set A, loop
+-- jmp A
 
 opcode_selector: Core_ByteMultiplexer port map(
     "00000000", "00000101", "00000111", "00000111", "00000111", "00000111", "00000111", "00000111",  

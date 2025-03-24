@@ -111,6 +111,7 @@ signal
     not_a,
     a_opor_b,
     a_opxor_b,
+	prop_0_b,
 
     internal_debug_output,
     subtracter_out,
@@ -143,7 +144,7 @@ signal
     program_counter_overwrite,
 	
     use_entered_opcode,
-    is_jump_instruction,
+    set_pc_as_reg_a,
   
     placeholder_bit
 : std_logic := '0';
@@ -163,12 +164,13 @@ signal
 -- 9    or B (A = A or B)
 -- 10   not  (not A)
 -- 11   xor B (A = A xor B)
-
+-- 12 	prop B, 0
 
 -- 16   shl B
 -- 17   shr B
 
--- 64   set pc, A (not implemented)
+-- 62	nop
+-- 63   set pc, A
 
 -- 129  jmp A
 
@@ -228,6 +230,7 @@ begin
     register_b_overwrite <= 
 			((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0)))		-- 2
         or  ((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))		    -- 5 
+		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (final_opcode(3)) and (final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))		    -- 12
 	;
     register_b: ByteRegister port map(data_in=>register_b_in, overwrite=>register_b_overwrite, rising_edge_clk=>clk, data_out=>register_b_out);
 
@@ -245,9 +248,8 @@ begin
       );    
     
     to_register_b_input: Core_ByteMultiplexer port map(
-
         placeholder_byte, placeholder_byte, register_a_out, placeholder_byte, placeholder_byte, final_immediate, placeholder_byte, placeholder_byte,
-        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, prop_0_b, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -262,7 +264,15 @@ begin
     a_opand_b <= register_a_out and register_b_out;
     a_opor_b <= register_a_out or register_b_out;
     a_opxor_b <= register_a_out xor register_b_out;
-    
+	
+	prop_0_b(7) <= register_b_out(0);
+	prop_0_b(6) <= register_b_out(0);
+	prop_0_b(5) <= register_b_out(0);
+	prop_0_b(4) <= register_b_out(0);
+	prop_0_b(3) <= register_b_out(0);
+	prop_0_b(2) <= register_b_out(0);
+	prop_0_b(1) <= register_b_out(0);
+	prop_0_b(0) <= register_b_out(0);
 
     adder: Adder8Bit port map(A => register_a_out, B => register_b_out, cin => '0', sum => adder_out, cout => placeholder_bit);
     sub: Subtracter port map(A => register_a_out, B => register_b_out, Difference => subtracter_out, Borrow => placeholder_bit);
@@ -284,10 +294,11 @@ begin
                         data_out => program_counter_current_index              
     );
 
-	is_jump_instruction <= 
-	       ((final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))
+	set_pc_as_reg_a <= 
+	       ((not final_opcode(7)) and (not final_opcode(6)) and (final_opcode(5)) and (final_opcode(4)) and (final_opcode(3)) and (final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))                       -- set pc, A
+	       or ((final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))   -- jmp, A
     ; 
-    increment_program_counter <= opcode(7) and not is_jump_instruction;
+    increment_program_counter <= opcode(7) and not set_pc_as_reg_a;
 
 	program_counter_increment: Adder8Bit port map(
 	   A => program_counter_current_index, 
@@ -304,7 +315,7 @@ begin
 	
     use_register_a_as_pc_index_and: AndEightBitByOneBit port map(
         eight_bits => register_a_out,
-        one_bit => is_jump_instruction,
+        one_bit => set_pc_as_reg_a,
         output => program_counter_index_from_reg_a
     );
 	
