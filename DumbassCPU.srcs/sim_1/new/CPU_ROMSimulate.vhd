@@ -1,19 +1,19 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity CPUInterface_Autonomous_TestBench is
+entity CPU_ROMSimulate is
 --  Port ( );
-end CPUInterface_Autonomous_TestBench;
+end CPU_ROMSimulate;
 
-architecture Behavioral of CPUInterface_Autonomous_TestBench is
+architecture Behavioral of CPU_ROMSimulate is
 
-component CPUInterface is Port(
+component CPU is Port(
     clk: in std_logic;
     opcode: in std_logic_vector(7 downto 0);
     immediate: in std_logic_vector(7 downto 0);
-    debug_output_reg_a,
-    debug_output_reg_b,
-    debug_output
+    register_A_port_out,
+    register_B_port_out,
+    program_counter_out
     : out std_logic_vector(7 downto 0);
     
     a_equal_b,
@@ -26,9 +26,9 @@ end component;
 signal 
     opcode, 
     immediate, 
-    debug_output_reg_a, 
-    debug_output_reg_b,
-    debug_output,
+    register_A_out, 
+    register_B_out,
+    program_counter_out,
     placeholder_byte
     : std_logic_vector(7 downto 0);
 signal 
@@ -37,13 +37,13 @@ signal
     : std_logic;
 
 begin
-    cpu: CPUInterface port map(
+    cpu_m: CPU port map(
         clk => clk, 
         opcode => opcode, 
         immediate => immediate, 
-        debug_output_reg_a => debug_output_reg_a, 
-        debug_output => debug_output, 
-        debug_output_reg_b => debug_output_reg_b,
+        register_A_port_out => register_A_out, 
+        program_counter_out => program_counter_out, 
+        register_B_port_out => register_B_out,
         a_equal_b => placeholder_bit,
         a_greater_b => placeholder_bit,
         a_lesser_b => placeholder_bit

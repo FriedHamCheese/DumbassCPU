@@ -10,7 +10,7 @@ entity decoder4x16 is
     );
 end decoder4x16;
 
-architecture Behavioral_dec of decoder4x16 is
+architecture Dataflow of decoder4x16 is
 begin
     -- process(addr, en)
     --     variable tmp : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
@@ -59,4 +59,4 @@ begin
 	out_dec(14) <= en and (addr(3)) and (addr(2)) and (addr(1)) and (not addr(0));					--1110
 	out_dec(15) <= en and (addr(3)) and (addr(2)) and (addr(1)) and (addr(0));						--1111
 	
-end Behavioral_dec;
+end Dataflow;

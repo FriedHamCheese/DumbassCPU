@@ -13,7 +13,7 @@ entity Adder8Bit is
     );
 end Adder8Bit;
 
-architecture Behavioral of Adder8Bit is
+architecture Dataflow of Adder8Bit is
     signal Carry : STD_LOGIC_VECTOR (7 downto 0);
 begin
 
@@ -42,4 +42,4 @@ begin
     Carry(7) <= (A(7) and B(7)) or (Carry(6) and (A(7) xor B(7)));
 
     Cout <= Carry(7);
-end Behavioral;
+end Dataflow;

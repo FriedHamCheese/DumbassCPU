@@ -32,10 +32,6 @@ begin
     stage_0_55_to_48_mux:   EightBitToOneBitMultiplexer port map(input_bits(55 downto 48), selecting_bits(2 downto 0), stage_1_63_to_0_input_bits(6));
     stage_0_63_to_56_mux:   EightBitToOneBitMultiplexer port map(input_bits(63 downto 56), selecting_bits(2 downto 0), stage_1_63_to_0_input_bits(7));
 
-    stage_1_63_to_0_mux:    EightBitToOneBitMultiplexer port map(stage_1_63_to_0_input_bits, selecting_bits(5 downto 3), stage_2_255_to_0_input_bits(0));
-
-    stage_2_255_to_0_selecting_bits(1) <= selecting_bits(7);
-    stage_2_255_to_0_selecting_bits(0) <= selecting_bits(6);
-    stage_2_255_to_0_mux:   EightBitToOneBitMultiplexer port map(stage_2_255_to_0_input_bits, stage_2_255_to_0_selecting_bits, selected_bit);
+    stage_1_63_to_0_mux:    EightBitToOneBitMultiplexer port map(stage_1_63_to_0_input_bits, selecting_bits(5 downto 3), selected_bit);
 
 end Structural;

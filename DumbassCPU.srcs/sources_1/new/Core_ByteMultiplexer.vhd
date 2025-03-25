@@ -106,7 +106,6 @@ begin
 	grouped_by_byte(1) <= byte_1_in;
 	grouped_by_byte(0) <= byte_0_in;
 
-    -- not coding 256*8 lines ok, vhdl sucks more than wiring shit up
 	proc: process(grouped_by_byte) is
 	begin
 		for byte in 0 to LAST_byte loop
