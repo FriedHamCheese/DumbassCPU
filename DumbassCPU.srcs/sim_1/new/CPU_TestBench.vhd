@@ -209,7 +209,15 @@ begin
         wait for 100ns;
         assert (register_A_out = "00011101");           
         
-        
+        -- set pc, A
+		opcode <= "00000000";
+		immediate <= "00100100";
+		wait for 100ns;
+		opcode <= "00111111";
+		wait for 100ns;
+		assert(program_counter = "00100100");
+		
+		
         -- test comparator results
         -- a == b
         opcode <= "00000000";

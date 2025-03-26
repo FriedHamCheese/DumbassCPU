@@ -71,6 +71,20 @@ begin
         report "Failed at case 1: to not overwrite"
         severity error;
         
+        overwrite <= '0';
+        data_in <= "10011101";
+        wait for 100ns;
+        assert(data_out = "10101010")
+        report "Failed at case 2: to not overwrite"
+        severity error;
+        
+        overwrite <= '1';
+        data_in <= "10011101";
+        wait for 100ns;
+        assert(data_out = "10011101")
+        report "Failed at case 3: overwrite"
+        severity error;
+        
         assert(false)
         report "---- ByteRegister_UnitTest end ----"
         severity note;
