@@ -110,6 +110,14 @@ component RoughDivide is
            Quotient : out std_logic_vector(7 downto 0));
 end component;
 
+component Multiplier8Bit is
+    Port (
+        a : in  STD_LOGIC_VECTOR (7 downto 0);
+        b : in  STD_LOGIC_VECTOR (7 downto 0);
+        c : out STD_LOGIC_VECTOR (7 downto 0)
+    );
+end component;
+
 signal 
     placeholder_byte,
     register_a_in, 
@@ -131,6 +139,7 @@ signal
     shift_left_out,
     shift_right_result,
     rough_divide_out,
+    multiplier_out,
   
     program_counter_in,
     program_counter_current_index,
@@ -171,17 +180,17 @@ signal
 -- 4    set mem[A], B
 -- 5    set B, imm
 
--- 6    sub (A = A-B)
--- 7    add (A = A+B)
+-- 6    sub A, B
+-- 7    add A, B
 
--- 8    and B (A = A and B)
--- 9    or B (A = A or B)
--- 10   not  (not A)
--- 11   xor B (A = A xor B)
+-- 8    and A, B
+-- 9    or B
+-- 10   not A
+-- 11   xor A, B
 -- 12 	prop B, 0
 
--- 16   shl B
--- 17   shr B
+-- 16   shl A, B
+-- 17   shr A, B
 -- 18   mul A, B
 -- 19   rdiv A, B
 
@@ -240,7 +249,8 @@ begin
 
 		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (not final_opcode(0)))		-- 16
 		or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))		    -- 17
-        or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))		    -- 19
+        or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (not final_opcode(0)))		    -- 18
+        or 	((not final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (final_opcode(1)) and (final_opcode(0)))		        -- 19
 	;
     register_a: ByteRegister port map(data_in=>register_a_in, overwrite=>register_a_overwrite, rising_edge_clk=>clk, data_out=>register_a_out);
 
@@ -254,7 +264,7 @@ begin
     to_register_a_input: Core_ByteMultiplexer port map(
         final_immediate, register_b_out, placeholder_byte, ram_output, placeholder_byte, placeholder_byte, subtracter_out, adder_out,
         a_opand_b, a_opor_b, not_a, a_opxor_b, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
-        shift_left_out, shift_right_result, placeholder_byte, rough_divide_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
+        shift_left_out, shift_right_result, multiplier_out, rough_divide_out, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
         placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte, placeholder_byte,
@@ -306,10 +316,16 @@ begin
         greater => a_greater_b, 
         lesser => a_lesser_b
     );
+    
+    multiplier: Multiplier8Bit port map(
+        a => register_a_out,
+        b => register_b_out,
+        c => multiplier_out
+    );
 
 	-- program counter and ROM sectioon
     program_counter: ByteRegister port map(data_in => program_counter_in, 
-                        overwrite => '1',
+                        overwrite => program_counter_overwrite,
                         rising_edge_clk => clk,
                         data_out => program_counter_current_index              
     );
@@ -319,6 +335,7 @@ begin
 	       or ((final_opcode(7)) and (not final_opcode(6)) and (not final_opcode(5)) and (not final_opcode(4)) and (not final_opcode(3)) and (not final_opcode(2)) and (not final_opcode(1)) and (final_opcode(0)))   -- jmp, A
     ; 
     increment_program_counter <= opcode(7) and not set_pc_as_reg_a;
+    program_counter_overwrite <= set_pc_as_reg_a or increment_program_counter;
 
 	program_counter_increment: Adder8Bit port map(
 	   A => program_counter_current_index, 

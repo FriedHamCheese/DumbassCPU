@@ -198,6 +198,17 @@ begin
         wait for 100ns;
         assert (register_A_out = "00000101");   
         
+        -- mul A, B (01100110 x 00101011 = 00100010)
+        opcode <= "00000000";
+        immediate <= "01100110";
+        wait for 100ns;
+        opcode <= "00000101";
+        immediate <= "00101011";
+        wait for 100ns;
+        opcode <= "00010010";
+        wait for 100ns;
+        assert (register_A_out = "00100010");    
+        
         -- rdiv A, B (01110101 ~/ 7 = 00011101)
         opcode <= "00000000";
         immediate <= "01110101";

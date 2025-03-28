@@ -17,29 +17,35 @@ end component;
 signal selecting_bits: std_logic_vector(7 downto 0);
 signal selected_bit: std_logic;
 
+constant testing_bits : std_logic_vector(63 downto 0) := "0011110011101111010001100110010101011110110100111101000101111101";
+
 begin
-    selector: Core_BitMultiplexer port map("1010101010101010101010101010101010101010101010101010101010101010", selecting_bits, selected_bit);
+    selector: Core_BitMultiplexer port map(testing_bits, selecting_bits, selected_bit);
     proc: process is
     begin
-        assert(false = true)
-        report "---- Core_BitMultiplexer_UnitTest Begin ----"
-        severity note;
-        
         selecting_bits <= "00000000";
         wait for 20ns;
-        assert(selected_bit = '0')
-        report "Core_BitMultiplexer_UnitTest: failed case 0 ----"
-        severity error;    
+        assert(selected_bit = '1'); 
         
-        selecting_bits <= "00000001";
+        selecting_bits <= "00101010";
         wait for 20ns;
-        assert(selected_bit = '1')
-        report "Core_BitMultiplexer_UnitTest: failed case 1 ----"
-        severity error;    
-        
-        assert(false = true)
-        report "---- Core_BitMultiplexer_UnitTest End ----"
-        severity note;
+        assert(selected_bit = '1');
+		
+        selecting_bits <= "00101001";
+        wait for 20ns;
+        assert(selected_bit = '1');
+		
+        selecting_bits <= "00100100";
+        wait for 20ns;
+        assert(selected_bit = '0');
+
+        selecting_bits <= "00111001";
+        wait for 20ns;
+        assert(selected_bit = '0');
+		
+        selecting_bits <= "00100111";
+        wait for 20ns;
+        assert(selected_bit = '0');
         wait;
     end process proc;
 
