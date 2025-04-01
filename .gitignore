@@ -9,3 +9,8 @@ vivado.jou
 vivado_1232.backup.log
 vivado_1232.backup.jou
 /DumbassCPU.srcs/utils_1
+/CPULite.cache
+/CPULite.runs
+/CPULite.sim
+/CPULite.hw
+/CPULite.ip_user_files
